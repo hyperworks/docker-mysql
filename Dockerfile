@@ -24,8 +24,6 @@ RUN tar xzvf /tmp/etcd-v2.0.11-linux-amd64.tar.gz
 RUN cp /etcd-v2.0.11-linux-amd64/etcdctl /usr/local/bin/etcdctl
 RUN rm -rf /tmp/etcd-v2.0.11-linux-amd64.tar.gz /etcd-v2.0.11-linux-amd64
 
-ENV UPDATE 8
-
 # Add MySQL configuration
 ADD my.cnf /etc/mysql/conf.d/my.cnf
 ADD mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
