@@ -18,22 +18,13 @@ RUN rm -rf /var/lib/mysql/*
 # Remove syslog configuration
 RUN rm /etc/mysql/conf.d/mysqld_safe_syslog.cnf
 
-
 RUN curl -L https://github.com/coreos/etcd/releases/download/v2.0.11/etcd-v2.0.11-linux-amd64.tar.gz -o /tmp/etcd-v2.0.11-linux-amd64.tar.gz
 RUN tar xzvf /tmp/etcd-v2.0.11-linux-amd64.tar.gz
 RUN cp /etcd-v2.0.11-linux-amd64/etcdctl /usr/local/bin/etcdctl
 RUN rm -rf /tmp/etcd-v2.0.11-linux-amd64.tar.gz /etcd-v2.0.11-linux-amd64
 
-# Add MySQL configuration
-ADD my.cnf /etc/mysql/conf.d/my.cnf
-ADD mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
-
-# Add MySQL scripts
-ADD import_sql.sh /import_sql.sh
-ADD run.sh /run.sh
-RUN chmod 755 /*.sh
-
 # Exposed ENV
+ENV NET_INTERFACE eth0
 ENV MYSQL_PORT 3600
 ENV MYSQL_USER admin
 ENV MYSQL_PASS **Random**
@@ -45,6 +36,15 @@ ENV REPLICATION_MASTER **False**
 ENV REPLICATION_SLAVE **False**
 ENV REPLICATION_USER replica
 ENV REPLICATION_PASS replica
+
+# Add MySQL configuration
+ADD my.cnf /etc/mysql/conf.d/my.cnf
+ADD mysqld_charset.cnf /etc/mysql/conf.d/mysqld_charset.cnf
+
+# Add MySQL scripts
+ADD import_sql.sh /import_sql.sh
+ADD run.sh /run.sh
+RUN chmod 755 /*.sh
 
 # Add VOLUMEs to allow backup of config and databases
 VOLUME  ["/etc/mysql", "/var/lib/mysql"]

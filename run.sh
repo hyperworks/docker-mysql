@@ -118,7 +118,7 @@ fi
 if [ -n "${REPLICATION}" ] && [ -n "${ETCDCTL_PEERS}" ] ; then
 
     if [ -z "${IP_ADDR}" ]; then
-        IP_ADDR="$(ifconfig eth0 | grep 'inet addr:' | cut -d: -f2 | awk '{print $1}')"
+        IP_ADDR="$(ifconfig ${NET_INTERFACE} | grep 'inet addr:' | cut -d: -f2 | awk '{print $1}')"
     fi
     echo "=> IP: ${IP_ADDR}"
     echo "=> MYSQL_PORT=${MYSQL_PORT}"
