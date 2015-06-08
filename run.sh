@@ -153,9 +153,9 @@ if [ -n "${REPLICATION}" ] && [ -n "${ETCDCTL_PEERS}" ] ; then
         ETCD_DIR="mysql"
     fi
 
-    MASTER_HOST=$(etcdctl get $ETCD_DIR/master_host)
+    MASTER_HOST=$(etcdctl get $ETCD_DIR/master/host)
     echo "=> MASTER_HOST=${MASTER_HOST}"
-    MASTER_PORT=$(etcdctl get $ETCD_DIR/master_port)
+    MASTER_PORT=$(etcdctl get $ETCD_DIR/master/port)
     echo "=> MASTER_PORT=${MASTER_PORT}"
 
     if [  "$MASTER_HOST" != "$IP_ADDR" ] || [ "$MASTER_PORT" != $MYSQL_PORT ]; then
@@ -163,14 +163,19 @@ if [ -n "${REPLICATION}" ] && [ -n "${ETCDCTL_PEERS}" ] ; then
         if [ -n "${MASTER_HOST}" ]; then
           # Set MySQL REPLICATION - SLAVE
             if [ -n "${IP_ADDR}" ] && [ -n "${MYSQL_PORT}" ]; then
-                MASTER_USER=$(etcdctl get $ETCD_DIR/master_user)
-                MASTER_PASS=$(etcdctl get $ETCD_DIR/master_pass)
+                MASTER_USER=$(etcdctl get $ETCD_DIR/master/user)
+                MASTER_PASS=$(etcdctl get $ETCD_DIR/master/pass)
                 RAND="$(date +%s | rev | cut -c 1-2)$(echo ${RANDOM})"
                 echo "=> Writting configuration file '${CONF_FILE}' with server-id=${RAND}"
                 echo "=> Setting master connection info on slave"
                 echo "=> Starting MySQL ..."
                 StartMySQL
                 mysql -uroot -e "CHANGE MASTER TO MASTER_HOST='${MASTER_HOST}',MASTER_USER='${MASTER_USER}',MASTER_PASSWORD='${MASTER_PASS}',MASTER_PORT=${MASTER_PORT}, MASTER_CONNECT_RETRY=30"
+                ETCD_SLAVE_PATH="${IP_ADDR}_${MYSQL_PORT}"
+                etcdctl set $ETCD_DIR/slaves/$ETCD_SLAVE_PATH/host $IP_ADDR
+                etcdctl set $ETCD_DIR/slaves/$ETCD_SLAVE_PATH/port $MYSQL_PORT
+                etcdctl set $ETCD_DIR/slaves/$ETCD_SLAVE_PATH/user $MYSQL_USER
+                etcdctl set $ETCD_DIR/slaves/$ETCD_SLAVE_PATH/pass $MYSQL_PASS
                 echo "=> Done!"
                 mysqladmin -uroot shutdown
             fi
@@ -178,10 +183,10 @@ if [ -n "${REPLICATION}" ] && [ -n "${ETCDCTL_PEERS}" ] ; then
             # Set MySQL REPLICATION - MASTER
             if [ -n "${IP_ADDR}" ] && [ -n "${MYSQL_PORT}" ]; then
                 echo "=> Configuring MySQL replication as master ..."
-                etcdctl set $ETCD_DIR/master_host $IP_ADDR
-                etcdctl set $ETCD_DIR/master_port $MYSQL_PORT
-                etcdctl set $ETCD_DIR/master_user $MYSQL_USER
-                etcdctl set $ETCD_DIR/master_pass $MYSQL_PASS
+                etcdctl set $ETCD_DIR/master/host $IP_ADDR
+                etcdctl set $ETCD_DIR/master/port $MYSQL_PORT
+                etcdctl set $ETCD_DIR/master/user $MYSQL_USER
+                etcdctl set $ETCD_DIR/master/pass $MYSQL_PASS
                 echo "=> Done!"
             fi
         fi
